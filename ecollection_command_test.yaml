@@ -1,0 +1,67 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+ name: ace-ecollection-prod2
+spec:
+ replicas: 1
+ template:
+  metadata:
+   labels:
+    app: ace-ecollection-prod2
+  spec:
+   containers:
+    - name: ace-ecollection-prod2
+      image: milindlasurve1/cateina:ace24122019-new-7600-6
+      ports:
+       - containerPort: 7600
+       - containerPort: 1414
+       - containerPort: 7800
+       - containerPort: 7843
+       - containerPort: 9157
+       - containerPort: 9443
+       - containerPort: 9483
+      command: ["/bin/sh", "-c"]
+      args: 
+       - ps -ef  | grep IntegrationServer  | awk -F" " '{print $2}'| tr  '\n' ' ' | xargs pkill -9 ;
+         cd /opt/ibm/ace-11/server/bin;
+         . mqsiprofile;
+         mqsisetdbparms -w /home/aceuser/ace-server/ -n MYSQLDB -u mqsiUser -p Cateina\@1234;
+         mqsicvp -n MYSQLDB -u mqsiUser -p Cateina@1234;
+         echo "done";
+         runaceserver;
+      env:
+       - name: LICENSE
+         value: accept
+       - name: MQ_QMGR_NAME
+         value: LQM.IXC.prod
+      volumeMounts:
+        - mountPath: /home/aceuser/build
+          name: aceuser
+      restartPolicy: Always
+   volumes:
+       - name: aceuser
+         persistentVolumeClaim:
+          claimName: ace-ecollection-sit
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: ace-ecollection-prod2
+spec:
+ selector:
+   app: ace-ecollection-prod2
+ ports:
+  - name: ace-ecollection-prod2
+    port: 7600
+    targatePort:
+---
+apiVersion: v1
+kind: Route
+metadata:
+  name: ace-ecollection-prod2
+spec:
+  host: ace-ecollection-prod2-testing.28122019.13.71.81.159.nip.io
+  path: "/" 
+  to:
+    kind: Service
+    name: ace-ecollection-prod2

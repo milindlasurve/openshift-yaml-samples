@@ -1,0 +1,77 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+ name: ace-ecollection-sit-milind
+spec:
+ replicas: 1
+ template:
+  metadata:
+   labels:
+    app: ace-ecollection-sit
+  spec:
+   volumes:
+       - name: aceuser
+         persistentVolumeClaim:
+          claimName: ace-ecollection-sit
+   containers:
+    - name: ace-ecollection-sit
+      image: milindlasurve1/cateina:ace24122019-new-7600-6
+      ports:
+       - containerPort: 7600
+       - containerPort: 1414
+       - containerPort: 7800
+       - containerPort: 7843
+       - containerPort: 9157
+       - containerPort: 9443
+       - containerPort: 9483
+      env:
+       - name: LICENSE
+         value: accept
+       - name: MQ_QMGR_NAME
+         value: LQM.IXC
+      volumeMounts:
+        - mountPath: /home/aceuser/build
+          name: aceuser
+      restartPolicy: Always
+    - name: ace-ecollection-sit1
+      image: milindlasurve1/cateina:ace24122019-new-7600-6
+      ports:
+       - containerPort: 7600
+       - containerPort: 1414
+       - containerPort: 7800
+       - containerPort: 7843
+       - containerPort: 9157
+       - containerPort: 9443
+       - containerPort: 9483
+      env:
+       - name: LICENSE
+         value: accept
+       - name: MQ_QMGR_NAME
+         value: LQM.IXC1
+      volumeMounts:
+        - mountPath: /home/aceuser/build1
+          name: aceuser
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+ name: ace-ecollection-sit
+spec:
+ selector:
+   app: ace-ecollection-sit
+ ports:
+  - name: ace-ecollection-sit
+    port: 7600
+    targatePort:
+---
+apiVersion: v1
+kind: Route
+metadata:
+  name: ace-ecollection-sit
+spec:
+  host: ace-ecollection-sit-test2-milind.13.71.81.159.nip.io
+  path: "/" 
+  to:
+    kind: Service
+    name: ace-ecollection-sit
